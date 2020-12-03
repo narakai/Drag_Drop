@@ -68,6 +68,7 @@ extension CachesDataSource {
         let geocache = geocaches[indexPath.item]
         let itemProvider = NSItemProvider(object: geocache.name as NSString)
         let dragItem = UIDragItem(itemProvider: itemProvider)
+        dragItem.localObject = geocache
         return [dragItem]
     }
 
@@ -81,6 +82,10 @@ extension CachesDataSource {
         let geocache = geocaches[sourceIndex]
         geocaches.remove(at: sourceIndex)
         geocaches.insert(geocache, at: destinationIndex)
+    }
+
+    func deleteGeocache(at index: Int) {
+        geocaches.remove(at: index)
     }
 
 }

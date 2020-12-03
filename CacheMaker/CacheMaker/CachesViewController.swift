@@ -113,8 +113,33 @@ extension CachesViewController: UICollectionViewDragDelegate {
                         itemsForBeginning session: UIDragSession,
                         at indexPath: IndexPath) -> [UIDragItem] {
         let dataSource = dataSourceForCollectionView(collectionView)
+
+        let dragCoordinator = CacheDragCoordinator(sourceIndexPath: indexPath)
+        session.localContext = dragCoordinator
+
         return dataSource.dragItems(for: indexPath)
     }
+
+    func collectionView(_ collectionView: UICollectionView,
+                        dragSessionDidEnd session: UIDragSession) {
+        // 1
+        guard
+                let dragCoordinator = session.localContext as? CacheDragCoordinator,
+                dragCoordinator.dragCompleted == true,
+                dragCoordinator.isReordering == false
+                else {
+            return
+        }
+        // 2
+        let dataSource = dataSourceForCollectionView(collectionView)
+        let sourceIndexPath = dragCoordinator.sourceIndexPath
+        // 3
+        collectionView.performBatchUpdates({
+            dataSource.deleteGeocache(at: sourceIndexPath.item)
+            collectionView.deleteItems(at: [sourceIndexPath])
+        })
+    }
+
 }
 
 extension CachesViewController: UICollectionViewDropDelegate {
@@ -138,38 +163,54 @@ extension CachesViewController: UICollectionViewDropDelegate {
         // 4
         switch coordinator.proposal.operation {
         case .move:
-            print("Moving...")
             // 1
+            guard let dragCoordinator =
+            coordinator.session.localDragSession?.localContext as? CacheDragCoordinator
+                    else {
+                return
+            }
+// 2
             if let sourceIndexPath = item.sourceIndexPath {
-                // 2
+                print("Moving within the same collection view...")
+                // 3
+                dragCoordinator.isReordering = true
+                // 4
                 collectionView.performBatchUpdates({
-                    dataSource.moveGeocache(
-                            at: sourceIndexPath.item,
-                            to: destinationIndexPath.item)
+                    dataSource.moveGeocache(at: sourceIndexPath.item, to: destinationIndexPath.item)
                     collectionView.deleteItems(at: [sourceIndexPath])
                     collectionView.insertItems(at: [destinationIndexPath])
                 })
-                // 3
-                coordinator.drop(item.dragItem, toItemAt: destinationIndexPath)
+            } else {
+                print("Moving between collection views...")
+                // 5
+                dragCoordinator.isReordering = false
+                // 6
+                if let geocache = item.dragItem.localObject as? Geocache {
+                    collectionView.performBatchUpdates({
+                        dataSource.addGeocache(geocache, at: destinationIndexPath.item)
+                        collectionView.insertItems(at: [destinationIndexPath])
+                    })
+                }
             }
+// 7
+            dragCoordinator.dragCompleted = true
+// 8
+            coordinator.drop(item.dragItem, toItemAt: destinationIndexPath)
 
         case .copy:
-            print("Copying...")
+            print("Copying from different app...")
             let itemProvider = item.dragItem.itemProvider
-            // 5
             itemProvider.loadObject(ofClass: NSString.self) { string, error in
                 if let string = string as? String {
-                    // 6
                     let geocache = Geocache(
                             name: string, summary: "Unknown", latitude: 0.0, longitude: 0.0)
-                    // 7
                     dataSource.addGeocache(geocache, at: destinationIndexPath.item)
-                    // 8
                     DispatchQueue.main.async {
                         collectionView.insertItems(at: [destinationIndexPath])
                     }
                 }
             }
+
         default:
             return
         }
@@ -180,15 +221,18 @@ extension CachesViewController: UICollectionViewDropDelegate {
             dropSessionDidUpdate session: UIDropSession,
             withDestinationIndexPath destinationIndexPath: IndexPath?
     ) -> UICollectionViewDropProposal {
-        if session.localDragSession != nil {
-            return UICollectionViewDropProposal(
-                    operation: .move,
-                    intent: .insertAtDestinationIndexPath)
-        } else {
+        guard session.localDragSession != nil else {
             return UICollectionViewDropProposal(
                     operation: .copy,
                     intent: .insertAtDestinationIndexPath)
         }
+        guard session.items.count == 1 else {
+            return UICollectionViewDropProposal(operation: .cancel)
+        }
+        return UICollectionViewDropProposal(
+                operation: .move,
+                intent: .insertAtDestinationIndexPath)
+
     }
 
 }

@@ -18,6 +18,7 @@
 		CBCEBDBA223650DC00B22C29 /* CachesDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBCEBDB9223650DC00B22C29 /* CachesDataSource.swift */; };
 		CBCEBDBC2236553200B22C29 /* RotatingFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBCEBDBB2236553200B22C29 /* RotatingFlowLayout.swift */; };
 		CBCEBDBE223F328200B22C29 /* Geocaches.plist in Resources */ = {isa = PBXBuildFile; fileRef = CBCEBDBD223F328200B22C29 /* Geocaches.plist */; };
+		FCA1534FE875A9027FD8773B /* CacheDragCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCA15F85E35A84C214746B3A /* CacheDragCoordinator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -47,6 +48,7 @@
 		CBCEBDB9223650DC00B22C29 /* CachesDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachesDataSource.swift; sourceTree = "<group>"; };
 		CBCEBDBB2236553200B22C29 /* RotatingFlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RotatingFlowLayout.swift; sourceTree = "<group>"; };
 		CBCEBDBD223F328200B22C29 /* Geocaches.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Geocaches.plist; sourceTree = "<group>"; };
+		FCA15F85E35A84C214746B3A /* CacheDragCoordinator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CacheDragCoordinator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +93,7 @@
 				CB91AC86222CC7E40013FA42 /* Assets.xcassets */,
 				CB91AC88222CC7E40013FA42 /* LaunchScreen.storyboard */,
 				CB91AC8B222CC7E40013FA42 /* Info.plist */,
+				FCA15F85E35A84C214746B3A /* CacheDragCoordinator.swift */,
 			);
 			path = CacheMaker;
 			sourceTree = "<group>";
@@ -173,6 +176,7 @@
 				CBCEBDBC2236553200B22C29 /* RotatingFlowLayout.swift in Sources */,
 				CB91AC80222CC7E30013FA42 /* AppDelegate.swift in Sources */,
 				CBCEBDBA223650DC00B22C29 /* CachesDataSource.swift in Sources */,
+				FCA1534FE875A9027FD8773B /* CacheDragCoordinator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
