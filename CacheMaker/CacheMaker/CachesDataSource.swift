@@ -70,5 +70,18 @@ extension CachesDataSource {
         let dragItem = UIDragItem(itemProvider: itemProvider)
         return [dragItem]
     }
+
+    func addGeocache(_ newGeocache: Geocache, at index: Int) {
+        geocaches.insert(newGeocache, at: index)
+    }
+
+    func moveGeocache(at sourceIndex: Int, to destinationIndex: Int) {
+        guard sourceIndex != destinationIndex else { return }
+
+        let geocache = geocaches[sourceIndex]
+        geocaches.remove(at: sourceIndex)
+        geocaches.insert(geocache, at: destinationIndex)
+    }
+
 }
 

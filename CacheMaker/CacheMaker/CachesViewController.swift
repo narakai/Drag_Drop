@@ -79,6 +79,7 @@ class CachesViewController: UIViewController {
                 collectionView.dataSource = dataSourceForCollectionView(collectionView)
                 collectionView.delegate = self
                 collectionView.dragDelegate = self
+                collectionView.dropDelegate = self
             }
         }
     }
@@ -116,3 +117,78 @@ extension CachesViewController: UICollectionViewDragDelegate {
     }
 }
 
+extension CachesViewController: UICollectionViewDropDelegate {
+    func collectionView(
+            _ collectionView: UICollectionView,
+            performDropWith coordinator: UICollectionViewDropCoordinator) {
+        // 1
+        let dataSource = dataSourceForCollectionView(collectionView)
+        // 2
+        let destinationIndexPath: IndexPath
+        if let indexPath = coordinator.destinationIndexPath {
+            destinationIndexPath = indexPath
+        } else {
+            destinationIndexPath = IndexPath(
+                    item: collectionView.numberOfItems(inSection: 0),
+                    section: 0)
+        }
+
+        // 3
+        let item = coordinator.items[0]
+        // 4
+        switch coordinator.proposal.operation {
+        case .move:
+            print("Moving...")
+            // 1
+            if let sourceIndexPath = item.sourceIndexPath {
+                // 2
+                collectionView.performBatchUpdates({
+                    dataSource.moveGeocache(
+                            at: sourceIndexPath.item,
+                            to: destinationIndexPath.item)
+                    collectionView.deleteItems(at: [sourceIndexPath])
+                    collectionView.insertItems(at: [destinationIndexPath])
+                })
+                // 3
+                coordinator.drop(item.dragItem, toItemAt: destinationIndexPath)
+            }
+
+        case .copy:
+            print("Copying...")
+            let itemProvider = item.dragItem.itemProvider
+            // 5
+            itemProvider.loadObject(ofClass: NSString.self) { string, error in
+                if let string = string as? String {
+                    // 6
+                    let geocache = Geocache(
+                            name: string, summary: "Unknown", latitude: 0.0, longitude: 0.0)
+                    // 7
+                    dataSource.addGeocache(geocache, at: destinationIndexPath.item)
+                    // 8
+                    DispatchQueue.main.async {
+                        collectionView.insertItems(at: [destinationIndexPath])
+                    }
+                }
+            }
+        default:
+            return
+        }
+    }
+
+    func collectionView(
+            _ collectionView: UICollectionView,
+            dropSessionDidUpdate session: UIDropSession,
+            withDestinationIndexPath destinationIndexPath: IndexPath?
+    ) -> UICollectionViewDropProposal {
+        if session.localDragSession != nil {
+            return UICollectionViewDropProposal(
+                    operation: .move,
+                    intent: .insertAtDestinationIndexPath)
+        } else {
+            return UICollectionViewDropProposal(
+                    operation: .copy,
+                    intent: .insertAtDestinationIndexPath)
+        }
+    }
+
+}
