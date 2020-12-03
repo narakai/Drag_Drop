@@ -199,17 +199,33 @@ extension CachesViewController: UICollectionViewDropDelegate {
 
         case .copy:
             print("Copying from different app...")
+// 1
+            let placeholder = UICollectionViewDropPlaceholder(
+                    insertionIndexPath: destinationIndexPath, reuseIdentifier: "CacheCell")
+// 2
+            placeholder.cellUpdateHandler = { cell in
+                if let cell = cell as? CacheCell {
+                    cell.cacheNameLabel.text = "Loading..."
+                    cell.cacheSummaryLabel.text = ""
+                    cell.cacheImageView.image = nil
+                }
+            }
+// 3
+            let context = coordinator.drop(item.dragItem, to: placeholder)
             let itemProvider = item.dragItem.itemProvider
             itemProvider.loadObject(ofClass: NSString.self) { string, error in
                 if let string = string as? String {
                     let geocache = Geocache(
                             name: string, summary: "Unknown", latitude: 0.0, longitude: 0.0)
-                    dataSource.addGeocache(geocache, at: destinationIndexPath.item)
+                    // 4
                     DispatchQueue.main.async {
-                        collectionView.insertItems(at: [destinationIndexPath])
+                        context.commitInsertion(dataSourceUpdates: {_ in
+                            dataSource.addGeocache(geocache, at: destinationIndexPath.item)
+                        })
                     }
                 }
             }
+
 
         default:
             return
