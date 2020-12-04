@@ -27,45 +27,133 @@
 /// THE SOFTWARE.
 
 import Foundation
+import MobileCoreServices
+
+public let geocacheTypeId = "com.razeware.geocache"
+
+enum EncodingError: Error {
+    case invalidData
+}
 
 public class Geocache: NSObject, Codable {
-  // MARK: - Enums
-  public enum Key {
-    public static let name = "name"
-    public static let summary = "summary"
-    public static let latitude = "latitude"
-    public static let longitude = "longitude"
-    public static let image = "imageName"
-  }
+    // MARK: - Enums
+    public enum Key {
+        public static let name = "name"
+        public static let summary = "summary"
+        public static let latitude = "latitude"
+        public static let longitude = "longitude"
+        public static let image = "imageName"
+    }
 
-  // MARK: - Properties
-  public var name: String
-  public var summary: String
-  public var latitude: Double
-  public var longitude: Double
-  public var image: Data?
+    // MARK: - Properties
+    public var name: String
+    public var summary: String
+    public var latitude: Double
+    public var longitude: Double
+    public var image: Data?
 
-  // MARK: - Initialization
-  public required init(
-    name: String,
-    summary: String,
-    latitude: Double,
-    longitude: Double,
-    image: Data? = nil
+    // MARK: - Initialization
+    public required init(
+            name: String,
+            summary: String,
+            latitude: Double,
+            longitude: Double,
+            image: Data? = nil
     ) {
-    self.name = name
-    self.summary = summary
-    self.latitude = latitude
-    self.longitude = longitude
-    self.image = image
-  }
+        self.name = name
+        self.summary = summary
+        self.latitude = latitude
+        self.longitude = longitude
+        self.image = image
+    }
 
-  public required init(_ geocache: Geocache) {
-    self.name = geocache.name
-    self.summary = geocache.summary
-    self.latitude = geocache.latitude
-    self.longitude = geocache.longitude
-    self.image = geocache.image
-    super.init()
-  }
+    public required init(_ geocache: Geocache) {
+        self.name = geocache.name
+        self.summary = geocache.summary
+        self.latitude = geocache.latitude
+        self.longitude = geocache.longitude
+        self.image = geocache.image
+        super.init()
+    }
 }
+
+extension Geocache: NSItemProviderWriting {
+    // 1
+    public static var writableTypeIdentifiersForItemProvider: [String] {
+        return [geocacheTypeId,
+                kUTTypePNG as String,
+                kUTTypePlainText as String]
+    }
+
+    // 2
+    public func loadData(
+            withTypeIdentifier typeIdentifier: String,
+            forItemProviderCompletionHandler completionHandler:
+                    @escaping (Data?, Error?) -> Void)
+                    -> Progress? {
+        if typeIdentifier == kUTTypePNG as String {
+            // 3
+            if let image = image {
+                completionHandler(image, nil)
+            } else {
+                completionHandler(nil, nil)
+            }
+        } else if typeIdentifier == kUTTypePlainText as String {
+            // 4
+            completionHandler(name.data(using: .utf8), nil)
+        } else if typeIdentifier == geocacheTypeId {
+            // 5
+            do {
+                let archiver = NSKeyedArchiver(requiringSecureCoding: false)
+                try archiver.encodeEncodable(self, forKey: NSKeyedArchiveRootObjectKey)
+                archiver.finishEncoding()
+                let data = archiver.encodedData
+
+                completionHandler(data, nil)
+            } catch {
+                completionHandler(nil, nil)
+            }
+        }
+        return nil
+    }
+}
+
+extension Geocache: NSItemProviderReading {
+    // 1
+    public static var readableTypeIdentifiersForItemProvider: [String] {
+        return [geocacheTypeId,
+                kUTTypePlainText as String]
+    }
+
+    // 2
+    public static func object(withItemProviderData data: Data,
+                              typeIdentifier: String) throws -> Self {
+        if typeIdentifier == kUTTypePlainText as String {
+            // 3
+            guard let name = String(data: data, encoding: .utf8) else {
+                throw EncodingError.invalidData
+            }
+            return self.init(
+                    name: name,
+                    summary: "Unknown",
+                    latitude: 0.0,
+                    longitude: 0.0)
+        } else if typeIdentifier == geocacheTypeId {
+            // 4
+            do {
+                let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+                guard let geocache =
+                try unarchiver.decodeTopLevelDecodable(
+                        Geocache.self, forKey: NSKeyedArchiveRootObjectKey) else {
+                    throw EncodingError.invalidData
+                }
+                return self.init(geocache)
+            } catch {
+                throw EncodingError.invalidData
+            }
+        } else {
+            throw EncodingError.invalidData
+        }
+    }
+}
+

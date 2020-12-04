@@ -213,11 +213,8 @@ extension CachesViewController: UICollectionViewDropDelegate {
 // 3
             let context = coordinator.drop(item.dragItem, to: placeholder)
             let itemProvider = item.dragItem.itemProvider
-            itemProvider.loadObject(ofClass: NSString.self) { string, error in
-                if let string = string as? String {
-                    let geocache = Geocache(
-                            name: string, summary: "Unknown", latitude: 0.0, longitude: 0.0)
-                    // 4
+            itemProvider.loadObject(ofClass: Geocache.self) { geocache, _ in
+                if let geocache = geocache as? Geocache {
                     DispatchQueue.main.async {
                         context.commitInsertion(dataSourceUpdates: {_ in
                             dataSource.addGeocache(geocache, at: destinationIndexPath.item)

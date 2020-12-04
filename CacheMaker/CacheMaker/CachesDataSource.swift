@@ -66,7 +66,7 @@ class CachesDataSource: NSObject, UICollectionViewDataSource {
 extension CachesDataSource {
     func dragItems(for indexPath: IndexPath) -> [UIDragItem] {
         let geocache = geocaches[indexPath.item]
-        let itemProvider = NSItemProvider(object: geocache.name as NSString)
+        let itemProvider = NSItemProvider(object: geocache)
         let dragItem = UIDragItem(itemProvider: itemProvider)
         dragItem.localObject = geocache
         return [dragItem]
