@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "CB91AC7B222CC7E30013FA42"
-               BuildableName = "CacheMaker.app"
-               BlueprintName = "CacheMaker"
-               ReferencedContainer = "container:../CacheMaker/CacheMaker.xcodeproj">
+               BuildableName = "CacheEditor.app"
+               BlueprintName = "CacheEditor"
+               ReferencedContainer = "container:CacheEditor.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -56,9 +56,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "CB91AC7B222CC7E30013FA42"
-            BuildableName = "CacheMaker.app"
-            BlueprintName = "CacheMaker"
-            ReferencedContainer = "container:../CacheMaker/CacheMaker.xcodeproj">
+            BuildableName = "CacheEditor.app"
+            BlueprintName = "CacheEditor"
+            ReferencedContainer = "container:CacheEditor.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>

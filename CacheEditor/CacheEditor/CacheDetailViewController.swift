@@ -31,69 +31,112 @@ import Geocache
 import MapKit
 
 class CacheDetailViewController: UIViewController {
-  // MARK: - Properties
-  @IBOutlet weak var cacheImageView: UIImageView!
-  @IBOutlet weak var cacheNameTextField: UITextField!
-  @IBOutlet weak var cacheSummaryTextView: UITextView!
-  @IBOutlet weak var mapView: MKMapView!
+    // MARK: - Properties
+    @IBOutlet weak var cacheImageView: UIImageView!
+    @IBOutlet weak var cacheNameTextField: UITextField!
+    @IBOutlet weak var cacheSummaryTextView: UITextView!
+    @IBOutlet weak var mapView: MKMapView!
 
-  private var geocache = Geocache(
-    name: "Eiffel Tower",
-    summary: """
-      The Eiffel Tower is a wrought-iron lattice tower on the Champ de \
-      Mars in Paris, France. It is named after the engineer Gustave Eiffel, \
-      whose company designed and built the tower.
-      """,
-    latitude: 48.858370, longitude: 2.294481,
-    image: UIImage(named: "eiffel_tower")?.pngData()
+    private var geocache = Geocache(
+            name: "Eiffel Tower",
+            summary: """
+                     The Eiffel Tower is a wrought-iron lattice tower on the Champ de \
+                     Mars in Paris, France. It is named after the engineer Gustave Eiffel, \
+                     whose company designed and built the tower.
+                     """,
+            latitude: 48.858370, longitude: 2.294481,
+            image: UIImage(named: "eiffel_tower")?.pngData()
     )
 
-  // MARK: - Lifecycle methods
-  override func viewDidLoad() {
-    super.viewDidLoad()
-    configureView()
-  }
-
-  // MARK: - Actions
-  @IBAction func nameTextFieldChanged(_ sender: Any) {
-    if let name = cacheNameTextField.text {
-      geocache.name = name
+    // MARK: - Lifecycle methods
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.addInteraction(UIDragInteraction(delegate: self))
+        view.addInteraction(UIDropInteraction(delegate: self))
+        configureView()
     }
-  }
+
+    // MARK: - Actions
+    @IBAction func nameTextFieldChanged(_ sender: Any) {
+        if let name = cacheNameTextField.text {
+            geocache.name = name
+        }
+    }
 }
 
 // MARK: - Private methods
 private extension CacheDetailViewController {
-  func configureView() {
-    if let image = geocache.image {
-      cacheImageView.image = UIImage(data: image)
-    } else {
-      cacheImageView.image = nil
+    func configureView() {
+        if let image = geocache.image {
+            cacheImageView.image = UIImage(data: image)
+        } else {
+            cacheImageView.image = nil
+        }
+        cacheNameTextField.text = geocache.name
+        cacheSummaryTextView.text = geocache.summary
+        let coordinate = CLLocationCoordinate2D(latitude: geocache.latitude, longitude: geocache.longitude)
+        let mapRect = MKCoordinateRegion(
+                center: coordinate,
+                latitudinalMeters: 1000,
+                longitudinalMeters: 1000
+        )
+        mapView.setRegion(mapRect, animated: false)
     }
-    cacheNameTextField.text = geocache.name
-    cacheSummaryTextView.text = geocache.summary
-    let coordinate = CLLocationCoordinate2D(latitude: geocache.latitude, longitude: geocache.longitude)
-    let mapRect = MKCoordinateRegion(
-      center: coordinate,
-      latitudinalMeters: 1000,
-      longitudinalMeters: 1000
-    )
-    mapView.setRegion(mapRect, animated: false)
-  }
 
-  func adjustViewBrightness(to alpha: CGFloat) {
-    cacheImageView.alpha = alpha
-    cacheNameTextField.alpha = alpha
-    cacheSummaryTextView.alpha = alpha
-    mapView.alpha = alpha
-  }
+    func adjustViewBrightness(to alpha: CGFloat) {
+        cacheImageView.alpha = alpha
+        cacheNameTextField.alpha = alpha
+        cacheSummaryTextView.alpha = alpha
+        mapView.alpha = alpha
+    }
 }
 
 // MARK: - UITextViewDelegate
 extension CacheDetailViewController: UITextViewDelegate {
-  func textViewDidChange(_ textView: UITextView) {
-    if let summary = textView.text {
-      geocache.summary = summary
+    func textViewDidChange(_ textView: UITextView) {
+        if let summary = textView.text {
+            geocache.summary = summary
+        }
     }
-  }
+}
+
+// MARK: - UIDragInteractionDelegate
+extension CacheDetailViewController: UIDragInteractionDelegate {
+    func dragInteraction(
+            _ interaction: UIDragInteraction,
+            itemsForBeginning session: UIDragSession)
+                    -> [UIDragItem] {
+        let itemProvider = NSItemProvider(object: geocache)
+        let dragItem = UIDragItem(itemProvider: itemProvider)
+        return [dragItem]
+    }
+}
+
+// MARK: - UIDropInteractionDelegate
+extension CacheDetailViewController: UIDropInteractionDelegate {
+    func dropInteraction(
+            _ interaction: UIDropInteraction,
+            canHandle session: UIDropSession)
+                    -> Bool {
+        return session.canLoadObjects(ofClass: Geocache.self)
+    }
+
+    func dropInteraction(
+            _ interaction: UIDropInteraction,
+            sessionDidUpdate session: UIDropSession)
+                    -> UIDropProposal {
+        return UIDropProposal(operation: .copy)
+    }
+
+    func dropInteraction(
+            _ interaction: UIDropInteraction,
+            performDrop session: UIDropSession) {
+        session.loadObjects(ofClass: Geocache.self) { items in
+            if let geocaches = items as? [Geocache],
+               let geocache = geocaches.first {
+                self.geocache = geocache
+                self.configureView()
+            }
+        }
+    }
 }
